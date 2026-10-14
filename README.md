@@ -21,24 +21,33 @@ github-pages-site/
 
 ## 一键部署到 GitHub Pages
 
-> ⚠️ **重要：GitHub 已停用「账号密码」做 git 推送**（自 2021 年起），必须用 **Personal Access Token (PAT)**。
-> 生成方式：GitHub 网页 → 右上头像 → Settings → Developer settings → Personal access tokens → Tokens (classic)
-> → Generate new token (classic) → 勾选 `repo` 全部权限 → 生成并**复制**（只显示一次）。
-> 另外：当前 WorkBuddy 沙箱**连不上 github.com**，所以推送必须在你本机（有网的机器）执行。
->
-> 站点域名已写死为 `JasonNJ2001.github.io/study-china`（账号 JasonNJ2001，仓库名 study-china），无需再改。
+### 实测环境结论（2026-10-14 验证）
+| 项 | 状态 | 说明 |
+|---|---|---|
+| `github.com` **直连** | ❌ 不通 | 超时（换美国 IP 亦超时） |
+| `github.com` **经系统代理** | ✅ 200 | 走 `http://127.0.0.1:5780`（Windows 系统代理）即可 |
+| `api.github.com` 直连 | ✅ 200 | 可绕开代理直连 |
+| 远程仓库 | ✅ 已存在 | `JasonNJ2001/study-china`（空仓、公开、默认分支 main） |
+| 本地仓库 | ✅ 就绪 | 已 `git init` + 提交，分支已重命名为 `main` |
+| 剩余卡点 | ⚠️ token 权限 | 旧 PAT 报 `Permission to … denied`，缺 `Contents: Read and write` |
 
-**第一步（本机终端执行，已 git init + commit 就绪，直接加远程并推送）：**
+> ⚠️ **GitHub 已停用「账号密码」做 git 推送**（2021 年起），必须用 **Personal Access Token (PAT)**。
 
+### A. 最省事：修好 PAT 权限后跑一键脚本
+1. **修 token 权限**（30 秒）：打开 <https://github.com/settings/personal-access-tokens> → 点你那个 token → 
+   - Repository access：确认 **包含 `study-china`**（或选 All repositories）
+   - Repository permissions → **Contents → Read and write**
+   - Save
+2. 双击本目录下的 **`deploy-push.bat`**，按提示粘贴 token（不会写入任何文件），自动完成推送。
+
+### B. 手动命令（cmd / Git Bash 均可）
 ```bash
-cd github-pages-site
-git remote add origin https://<你的PAT>@github.com/JasonNJ2001/study-china.git
-git branch -M main
-git push -u origin main
+cd D:/Myprograms/互联网推广/github-pages-site
+git -c http.proxy=http://127.0.0.1:5780 -c https.proxy=http://127.0.0.1:5780 \
+    push "https://<你的PAT>@github.com/JasonNJ2001/study-china.git" main:main
 ```
-
-> 若还没建远程仓库：先去 github.com 新建仓库 `study-china`（空仓库，不要勾 README），
-> 再执行上面三条。也可把 `<你的PAT>` 换成 `JasonNJ2001:<你的PAT>` 形式。
+> 代理必须加，否则连不上 github.com；token 建议用 **classic + `repo` 权限**（最不容易踩坑）。
+> 也可长期配置：`git config --global http.proxy http://127.0.0.1:5780`（换网络环境后记得改回）。
 
 **第二步（GitHub 网页）：**
 进入该仓库 **Settings → Pages → Source 选 `main` 分支 / root 目录 → Save**。
